@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -47,11 +48,17 @@ export class ProductsService {
     // take:4
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
+    console.log(isNaN(parseInt(id)));
+    let whereStatement = {};
+    if (isNaN(parseInt(id))) {
+      whereStatement = { slug: id };
+    } else {
+      whereStatement = { id: +id };
+    }
+    console.log(whereStatement);
     const product = await this.dbService.product.findFirst({
-      where: {
-        id,
-      },
+      where: whereStatement,
     });
     if (!product) {
       throw new NotFoundException('NOT_FOUND');
@@ -59,30 +66,29 @@ export class ProductsService {
     return product;
   }
 
-  async update(id: number, updateProductDto: UpdateProductDto) {
+  async update(id: string, updateProductDto: UpdateProductDto) {
     try {
       const product = await this.findOne(id);
-      if (!product) throw new NotFoundException('NOT_PRODUCT');
-
+      if (!product) throw new NotFoundException('NOT_FOUND');
       const updatedProduct = await this.dbService.product.update({
-        where: { id },
+        where: { id: +id },
         data: updateProductDto,
       });
       return updatedProduct;
     } catch (error) {
       this.logger.error(error);
-      if (error.message === 'NOT_PRODUCT')
+      if (error.message === 'NOT_FOUND')
         throw new NotFoundException('Product Not Found');
-
+      if (error.code === 'P2002') throw new ConflictException('Title duplicated');
       throw new BadRequestException('Something went wrong in updateProduct');
     }
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     try {
       //SUELTA UN CATCH SI ES QUE NO EXISTE
       const product = await this.findOne(id);
-      return this.dbService.product.delete({ where: { id } });
+      return this.dbService.product.delete({ where: { id: +id } });
     } catch (error) {
       this.logger.error(error);
       if (error.message === 'NOT_FOUND') {
@@ -91,6 +97,4 @@ export class ProductsService {
       throw new BadRequestException('Something went wrong in deleteProduct');
     }
   }
-
-  private handleExceptions(error: any) {}
 }
