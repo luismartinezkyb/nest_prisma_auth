@@ -2,7 +2,6 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-  InternalServerErrorException,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
@@ -10,6 +9,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { DbService } from 'src/db/db.service';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
+import { ProductImageInterface } from './interfaces/product-image.interface';
 
 @Injectable()
 export class ProductsService {
@@ -28,17 +28,32 @@ export class ProductsService {
           .split(' ')
           .join('_');
       }
+      const { images, ...body } = createProductDto;
+      // console.log(body);
       const product = await this.dbService.product.create({
-        data: createProductDto,
+        data: body,
       });
+      const imagesSaved = await this.dbService.productImages.createMany({
+        data: [
+          ...images.map((image) => ({
+            url: image,
+            productId: product.id,
+          })),
+        ],
+      });
+      console.log(imagesSaved);
       return product;
     } catch (error) {
-      this.logger.error(error);
-      throw new InternalServerErrorException('Error creating product');
+      this.handleProductError(error);
     }
   }
 
   async findAll({ limit = 10, offset = 0 }: PaginationDto) {
+    // const queryBuilder = await this.dbService.$queryRaw(
+    //   Prisma.sql``,
+    // );
+    // queryBuilder('SELECT * FROM ')
+    // console.log(queryBuilder);
     return this.dbService.product.findMany({
       take: limit,
       skip: offset,
@@ -59,6 +74,14 @@ export class ProductsService {
     console.log(whereStatement);
     const product = await this.dbService.product.findFirst({
       where: whereStatement,
+      include: {
+        images: {
+          // distinct
+          select: {
+            url: true,
+          },
+        },
+      },
     });
     if (!product) {
       throw new NotFoundException('NOT_FOUND');
@@ -70,17 +93,34 @@ export class ProductsService {
     try {
       const product = await this.findOne(id);
       if (!product) throw new NotFoundException('NOT_FOUND');
-      const updatedProduct = await this.dbService.product.update({
-        where: { id: +id },
-        data: updateProductDto,
+      return await this.dbService.$transaction(async (tx) => {
+        // SPREAD THE IMAGES FROM THE BODY
+        const { images, ...body } = updateProductDto;
+        if (images && images.length > 0) {
+          const imagesDeleted = await tx.productImages.deleteMany({
+            where: {
+              productId: product.id,
+            },
+          });
+          // console.log({ imagesDeleted });
+          const imagesSaved = await tx.productImages.createMany({
+            data: [
+              ...images.map((image) => ({
+                url: image,
+                productId: product.id,
+              })),
+            ],
+          });
+          // console.log(imagesSaved);
+        }
+        const updatedProduct = await tx.product.update({
+          where: { id: product.id },
+          data: body,
+        });
+        return updatedProduct;
       });
-      return updatedProduct;
     } catch (error) {
-      this.logger.error(error);
-      if (error.message === 'NOT_FOUND')
-        throw new NotFoundException('Product Not Found');
-      if (error.code === 'P2002') throw new ConflictException('Title duplicated');
-      throw new BadRequestException('Something went wrong in updateProduct');
+      this.handleProductError(error);
     }
   }
 
@@ -90,11 +130,15 @@ export class ProductsService {
       const product = await this.findOne(id);
       return this.dbService.product.delete({ where: { id: +id } });
     } catch (error) {
-      this.logger.error(error);
-      if (error.message === 'NOT_FOUND') {
-        throw new NotFoundException('Product Not Found');
-      }
-      throw new BadRequestException('Something went wrong in deleteProduct');
+      this.handleProductError(error);
     }
+  }
+
+  private handleProductError(error) {
+    this.logger.error(error);
+    if (error.message === 'NOT_FOUND')
+      throw new NotFoundException('Product Not Found');
+    if (error.code === 'P2002') throw new ConflictException('Title or Slug duplicated');
+    throw new BadRequestException('Something went wrong in updateProduct');
   }
 }

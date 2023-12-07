@@ -1,4 +1,5 @@
-import { Availability } from '@prisma/client';
+import { Availability, ProductImages } from '@prisma/client';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsIn,
@@ -40,4 +41,16 @@ export class CreateProductDto {
 
   @IsIn(['men', 'women', 'unisex', 'kid'])
   gender: string;
+
+  @IsArray()
+  @IsOptional()
+  @IsString({ each: true })
+  images?: string[];
 }
+
+// class Images {
+//   @IsArray()
+//   @IsOptional()
+//   @IsString({ each: true })
+//   create: ProductImages[];
+// }

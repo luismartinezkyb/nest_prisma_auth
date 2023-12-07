@@ -22,10 +22,18 @@ model Product{
   stock Int @default(0)
   sizes String[]
   gender String
+  images ProductImages[]
 }
 
 
 enum Availability {
   IN_STORE
   ONLINE
+}
+
+model ProductImages {
+  id Int @id @default(autoincrement())
+  url String @unique
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
 }
