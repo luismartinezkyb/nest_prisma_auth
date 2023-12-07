@@ -8,6 +8,7 @@ import {
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { DbService } from 'src/db/db.service';
+import { PaginationDto } from 'src/common/dtos/pagination.dto';
 
 @Injectable()
 export class ProductsService {
@@ -36,16 +37,26 @@ export class ProductsService {
     }
   }
 
-  async findAll() {
-    return this.dbService.product.findMany({});
+  async findAll({ limit = 10, offset = 0 }: PaginationDto) {
+    return this.dbService.product.findMany({
+      take: limit,
+      skip: offset,
+    });
+    //offset and limit
+    //skip:3,
+    // take:4
   }
 
   async findOne(id: number) {
-    return this.dbService.product.findFirst({
+    const product = await this.dbService.product.findFirst({
       where: {
         id,
       },
     });
+    if (!product) {
+      throw new NotFoundException('NOT_FOUND');
+    }
+    return product;
   }
 
   async update(id: number, updateProductDto: UpdateProductDto) {
@@ -57,6 +68,7 @@ export class ProductsService {
         where: { id },
         data: updateProductDto,
       });
+      return updatedProduct;
     } catch (error) {
       this.logger.error(error);
       if (error.message === 'NOT_PRODUCT')
@@ -66,8 +78,18 @@ export class ProductsService {
     }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+  async remove(id: number) {
+    try {
+      //SUELTA UN CATCH SI ES QUE NO EXISTE
+      const product = await this.findOne(id);
+      return this.dbService.product.delete({ where: { id } });
+    } catch (error) {
+      this.logger.error(error);
+      if (error.message === 'NOT_FOUND') {
+        throw new NotFoundException('Product Not Found');
+      }
+      throw new BadRequestException('Something went wrong in deleteProduct');
+    }
   }
 
   private handleExceptions(error: any) {}
