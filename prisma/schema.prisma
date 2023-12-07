@@ -17,7 +17,13 @@ model Product{
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   availability Availability
+  price Decimal? @default(0)
+  slug String? @unique
+  stock Int @default(0)
+  sizes String[]
+  gender String
 }
+
 
 enum Availability {
   IN_STORE
