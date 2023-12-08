@@ -37,3 +37,16 @@ model ProductImages {
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId Int
 }
+
+model User {
+  id Int @id @default(autoincrement())
+  email String @unique
+  fullName String
+  password String
+  isActive Boolean @default(true)
+  roles String[] @default(["user"])
+}
+
+
+
+
