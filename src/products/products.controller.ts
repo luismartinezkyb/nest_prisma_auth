@@ -3,6 +3,8 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
+import { Auth } from 'src/auth/decorators/auth.decorator';
+import { ValidRoles } from 'src/auth/interfaces/valid-roles';
 
 @Controller('products')
 export class ProductsController {
@@ -20,6 +22,7 @@ export class ProductsController {
   }
 
   @Get(':id')
+  @Auth(ValidRoles.admin)
   findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
   }

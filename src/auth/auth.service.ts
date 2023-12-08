@@ -10,12 +10,17 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { DbService } from 'src/db/db.service';
 import { compare, hash } from 'bcrypt';
 import { LoginUserDto } from './dto/login-user.dto';
+import { JwtPayload } from './interfaces/jwt-payload.interfaces';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger('AuthService');
 
-  constructor(private dbService: DbService) {}
+  constructor(
+    private dbService: DbService,
+    private readonly jwtService: JwtService,
+  ) {}
   async create(createUserDto: CreateUserDto) {
     try {
       const { password, ...rest } = createUserDto;
@@ -25,7 +30,7 @@ export class AuthService {
       });
 
       delete user.password;
-      return user;
+      return { user, token: this.getJwtToken({ id: user.id.toString() }) };
     } catch (error) {
       this.handleAuthtError(error);
     }
@@ -39,6 +44,7 @@ export class AuthService {
         select: {
           email: true,
           password: true,
+          id: true,
         },
       });
 
@@ -50,10 +56,16 @@ export class AuthService {
       delete user.password;
 
       //TODO: GENERRAR EL TOKEN
-      return user;
+      return { user, token: this.getJwtToken({ id: user.id.toString() }) };
     } catch (error) {
       this.handleAuthtError(error);
     }
+  }
+
+  private getJwtToken(payload: JwtPayload) {
+    //
+    const token = this.jwtService.sign(payload);
+    return token;
   }
 
   private handleAuthtError(error) {
