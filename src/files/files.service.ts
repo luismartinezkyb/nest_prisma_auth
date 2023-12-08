@@ -1,11 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateFileDto } from './dto/create-file.dto';
 import { UpdateFileDto } from './dto/update-file.dto';
+import { join } from 'path';
+import { existsSync } from 'fs';
 
 @Injectable()
 export class FilesService {
-  create(createFileDto: CreateFileDto) {
-    return 'This action adds a new file';
+  getOneFile(filename: string) {
+    const path = join(__dirname, '../../static/uploads', filename);
+    if (!existsSync(path)) throw new BadRequestException('Image not fount');
+
+    return path;
   }
 
   findAll() {
