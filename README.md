@@ -74,4 +74,53 @@ En esta sección estaremos trabajando con:
 
     Y mucho más
 
- ## SECCION JWT 
+ ## SECCION JWT
+ 
+ Autenticación
+
+Autorización
+
+Json Web Tokens
+
+Hash de contraseñas
+
+Nest Passport
+
+Módulos asíncronos
+
+Protección de rutas
+
+Custom Method Decorators
+
+Custom Class Decorators
+
+Custom Property Decorators
+
+Enlazar usuarios con productos
+
+Bearer Tokens
+
+ ## Sección API DOCUMENTATION 
+     Postman documentation
+
+    Nest Swagger
+
+
+## Nest WEBSOCKETS
+     Nest Gateways
+
+    Conexiones
+
+    Desconexiones
+
+    Emitir y escuchar mensajes desde el servidor y cliente
+
+    Cliente con Vite y TS
+
+    Autenticar conexión mediante JWTs
+
+    Usar mismo mecanismos de autenticación previamente creado
+
+    Desconectar sockets manualmente
+
+    Prevenir doble conexión de usuarios autenticados.

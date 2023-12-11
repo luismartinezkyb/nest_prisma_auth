@@ -45,8 +45,22 @@ model User {
   password String
   isActive Boolean @default(true)
   roles String[] @default(["user"])
+  sockets Socket[]
 }
-
+model Socket {
+  id String @id
+  isActive Boolean @default(false)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+}
+// model SocketConnections{
+//   id Int @id @default(autoincrement())
+//   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   userId Int
+//   socket Socket @relation(fields: [socketId], references: [id], onDelete: Cascade)
+//   socketId String
+//   isActive Boolean @default(false)
+// }
 
 
 
