@@ -19,7 +19,13 @@ import { UserRoleGuard } from './guards/user-role/user-role.guard';
 import { RoleProtected } from './decorators/role-protected.decorator';
 import { ValidRoles } from './interfaces/valid-roles';
 import { Auth } from './decorators/auth.decorator';
-import { ApiBearerAuth, ApiCreatedResponse, ApiForbiddenResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -54,7 +60,9 @@ export class AuthController {
     };
   }
   //META DATA AUTHORIZATION
-  
+  @ApiResponse({ status: 201, description: 'Product was created ' })
+  @ApiResponse({ status: 400, description: 'Product was not created ' })
+  @ApiResponse({ status: 403, description: 'Unauthorized ' })
   @Get('/private2')
   // @SetMetadata('roles', ['admin', 'super-user', 'user'])
   //GUARD UserRoleGuard

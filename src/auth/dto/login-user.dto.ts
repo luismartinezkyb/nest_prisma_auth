@@ -11,6 +11,8 @@ export class LoginUserDto {
   @ApiProperty({
     uniqueItems: true,
     example: 'exampl@example.com',
+    minLength: 1,
+    nullable: false,
   })
   @IsString()
   @IsEmail()
